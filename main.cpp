@@ -332,7 +332,10 @@ void renderObject(Object& object, int numberOfPoints)
 
 	// Bind vertex array object so we can render the 2 triangles.
 	glBindVertexArray(object.vao);
-	glDrawElements(GL_TRIANGLES, numberOfPoints, GL_UNSIGNED_SHORT, 0);
+	//Mit indizes
+	//glDrawElements(GL_TRIANGLES, object.indices.size(), GL_UNSIGNED_SHORT, 0);
+	//ohne indizes
+	glDrawArrays(GL_TRIANGLES, 0, object.vertices.size());
 	glBindVertexArray(0);
 }
 
@@ -574,9 +577,8 @@ void normalize(glm::vec3 origin, glm::vec3 v, float length, glm::vec3& normalize
 	
 	//get the distance between aand b along the xand y axes;;
 	float dx = v[0] - origin[0];
-	float	dy = v[1] - origin[1];
+	float dy = v[1] - origin[1];
 	float dz = v[2] - origin[2];
-	std::cout << dx << " " << dy << " " << dz << "\n";
 	//right now, sqrt(dx ^ 2 + dy ^ 2) = distance(a, b).
 	float distance = sqrt((dx * dx) + (dy * dy) + (dz * dz));
 	//we want to modify them so that sqrt(dx ^ 2 + dy ^ 2) = the given length.
@@ -590,7 +592,7 @@ void normalize(glm::vec3 origin, glm::vec3 v, float length, glm::vec3& normalize
 	normalizedVector[1] = origin[1] + dy;
 	normalizedVector[2] = origin[2] + dz;
 
-	std::cout << normalizedVector[0] << " " << normalizedVector[1] << " " << normalizedVector[2] << "\n";
+//	std::cout << normalizedVector[0] << " " << normalizedVector[1] << " " << normalizedVector[2] << "\n";
 }
 
 
@@ -647,69 +649,23 @@ void computeHalfVertex(const glm::vec3 v1, const glm::vec3 v2, glm::vec3 newV, c
 void initSphere(float radius) {
 	glm::vec3 origin = glm::vec3(0.0f, 0.0f, 0.0f);
 	std::vector<glm::vec3> vertices = { 
-		//links oben
-		/*glm::vec3(0.0f, 1.0f, 0.0f),
-		glm::vec3(-1.0f, 0.0f, 1.0f),
-		glm::vec3(-1.0f, 0.0f, -1.0f),
-		//mitte oben
+		//oben
 		glm::vec3(0.0f, 1.0f, 0.0f),
-		glm::vec3(-1.0f, 0.0f, 1.0f),
-		glm::vec3(1.0f, 0.0f, 1.0f),
-		//rechts -oben
-		glm::vec3(0.0f, 1.0f, 0.0f),
-		glm::vec3(1.0f, 0.0f, 1.0f),
-		glm::vec3(1.0f, 0.0f, -1.0f),
-		//hinten -oben
-		glm::vec3(0.0f, 1.0f, 0.0f),
-		glm::vec3(1.0f, 0.0f, 1.0f),
-		glm::vec3(1.0f, 0.0f, -1.0f),
-		//links unten
+		//unten
 		glm::vec3(0.0f, -1.0f, 0.0f),
-		glm::vec3(-1.0f, 0.0f, 1.0f),
-		glm::vec3(-1.0f, 0.0f, -1.0f),
-		//mitte unten
-		glm::vec3(0.0f, -1.0f, 0.0f),
-		glm::vec3(-1.0f, 0.0f, 1.0f),
-		glm::vec3(1.0f, 0.0f, 1.0f),
-		//rechts -unten
-		glm::vec3(0.0f, -1.0f, 0.0f),
-		glm::vec3(1.0f, 0.0f, 1.0f),
-		glm::vec3(1.0f, 0.0f, -1.0f),
-		//hinten -unten
-		glm::vec3(0.0f, -1.0f, 0.0f),
-		glm::vec3(1.0f, 0.0f, 1.0f),
-		glm::vec3(1.0f, 0.0f, -1.0f),
-
-		------
-		glm::vec3(0.0f, 1.0f, 0.0f),
-		glm::vec3(-1.0f, 0.0f, 0.0f),
-		glm::vec3(0.0f, 0.0f, -1.0f),
-		glm::vec3(1.0f, 0.0f, 0.0f),
-		glm::vec3(0.0f, -1.0f, 0.0f),
-		glm::vec3(0.0f, 0.0f, 1.0f)
-		*/
-
-		glm::vec3(0.0f, 1.0f, 0.0f),
-		glm::vec3(0.0f, -1.0f, 0.0f),
+		//vorne
 		glm::vec3(0.0f, 0.0f, 1.0f),
+		//rechts
 		glm::vec3(1.0f, 0.0f, 0.0f),
+		//links
 		glm::vec3(-1.0f, 0.0f, 0.0f),
+		//hinten
 		glm::vec3(0.0f, 0.0f, -1.0f)
 	};
-	std::vector<glm::vec3> colors = { glm::vec3(1.0f, 0.0f, 0.0f),glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f)};
+	std::vector<glm::vec3> colors = { glm::vec3(1.0f, 0.0f, 0.0f),glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(1.0f, 1.0f, 0.0f), glm::vec3(1.0f, 0.0f, 1.0f), glm::vec3(0.0f, 1.0f, 1.0f)};
 	std::vector<GLushort>  indices = { 
-	/*
-		0, 1, 2,
-		0, 2, 3,
-		0, 3, 4,
-		0, 4, 1,
-		5, 1, 2,
-		5, 2, 3,
-		5, 3, 4,
-		5, 4, 1
-	*/
 
-		0,2,3,     //face indices
+							 0,2,3,    
 							 0,2,4,
 							 0,5,4,
 							 0,5,3,
@@ -718,9 +674,13 @@ void initSphere(float radius) {
 							 1,5,3,
 							 1,5,4
 	};
-	for (auto i : vertices) {
-		normalize(origin, i, 1, i);
+	std::cout << "Beginn\n";
+	for (auto &i : vertices) {
+		std::cout <<"vertice: " << i.x << " " << i.y << " " << i.z << "\n";
+		normalize(origin, i, radius, i);
+		std::cout << "normalized vertice: " << i.x << " " << i.y << " " << i.z << "\n";
 	}
+	std::cout << "End\n";
 
 	std::vector<glm::vec3> tmpVertices;
 	std::vector<GLushort> tmpIndices;
@@ -729,9 +689,9 @@ void initSphere(float radius) {
 	unsigned int index;
 
 
-	int subdivision = 1;
+	int subdivision = 2;
 	// iterate all subdivision levels
-
+	/*
 	for (int i = 1; i <= subdivision; ++i)
 	{
 		// copy prev vertex/index arrays and clear
@@ -798,49 +758,48 @@ void initSphere(float radius) {
 			index += 12;    // next index
 		}
 	}
-	sphere.vertices = vertices;
-	sphere.indices = indices;
+	*/
 
-	for (int i = 0; i < sphere.vertices.size(); i++) {
-		sphere.colors.push_back({ 0.0f, 0.0f, 1.0f });
+
+	for (auto &i : vertices) {
+		normalize(i, origin, 1, i);
 	}
+	
+	subdivide(vertices[0], vertices[2], vertices[4], subdivision, sphere, 0, origin, radius);
+	subdivide(vertices[0], vertices[3], vertices[2], subdivision, sphere, 0, origin, radius);
+	subdivide(vertices[0], vertices[3], vertices[5], subdivision, sphere, 0, origin, radius);
+	subdivide(vertices[0], vertices[4], vertices[5], subdivision, sphere, 0, origin, radius);
 
-	std::cout << vertices.size() << "\n";
-	std::cout << indices.size() << "\n";
 
-
+	subdivide(vertices[1], vertices[2], vertices[4], subdivision, sphere, 0, origin, radius);
+	subdivide(vertices[1], vertices[3], vertices[2], subdivision, sphere, 0, origin, radius);
+	subdivide(vertices[1], vertices[3], vertices[5], subdivision, sphere, 0, origin, radius);
+	subdivide(vertices[1], vertices[4], vertices[5], subdivision, sphere, 0, origin, radius);
 
 
 	/*
-	for (auto i : vertices) {
-		normalize(i, origin, 1, i);
-		std::cout << i.x << " " << i.y << " " << i.z << "\n";
+	subdivide(vertices[0], vertices[1], vertices[2], 0, sphere, 0, origin, radius);
+	subdivide(vertices[0], vertices[2], vertices[3], 0, sphere, 0, origin, radius);
+	subdivide(vertices[0], vertices[3], vertices[4], 0, sphere, 0, origin, radius);
+	subdivide(vertices[0], vertices[4], vertices[1], 0, sphere, 0, origin, radius);
+
+
+	
+	subdivide(vertices[5], vertices[1], vertices[2], 0, sphere, 0, origin, radius);
+	subdivide(vertices[5], vertices[2], vertices[3], 0, sphere, 0, origin, radius);
+	subdivide(vertices[5], vertices[3], vertices[4], 0, sphere, 0, origin, radius);
+	subdivide(vertices[5], vertices[4], vertices[1], 0, sphere, 0, origin, radius);*/
+	for (auto i : sphere.vertices) {
+		//std::cout << i.x << " " << i.y << " " << i.z << "\n";
 	}
-	
 
-	sphere.colors = colors;
-	sphere.indices = indices;
-	sphere.vertices = vertices;
+	for (int i = 0; i < sphere.vertices.size(); i++) {
+		sphere.colors.push_back({ 1.0f, 1.0f, 0.0f });
+	}
 
-	
-	subdivide(sphere.vertices[0], sphere.vertices[1], sphere.vertices[2], 0, sphere, 0, origin, radius);
-	subdivide(sphere.vertices[0], sphere.vertices[2], sphere.vertices[3], 0, sphere, 1, origin, radius);
-	subdivide(sphere.vertices[0], sphere.vertices[3], sphere.vertices[4], 0, sphere, 2, origin, radius);
-	subdivide(sphere.vertices[0], sphere.vertices[4], sphere.vertices[1], 0, sphere, 3, origin, radius);
-
-
-	
-	subdivide(sphere.vertices[5], sphere.vertices[1], sphere.vertices[2], 0, sphere, 0, origin, radius);
-	subdivide(sphere.vertices[5], sphere.vertices[2], sphere.vertices[3], 0, sphere, 0, origin, radius);
-	subdivide(sphere.vertices[5], sphere.vertices[3], sphere.vertices[4], 0, sphere, 0, origin, radius);
-	subdivide(sphere.vertices[5], sphere.vertices[4], sphere.vertices[1], 0, sphere, 0, origin, radius);
-
-	for (int i = 0; i < sphere.indices.size(); i++) {
-		std::cout << sphere.indices[i] << ", ";
-		if ((i + 1) % 3 == 0) {
-			std::cout << "\n";
-		}
-	}*/
+	std::cout << sphere.vertices.size() << "\n";
+	std::cout << sphere.indices.size() << "\n";
+	std::cout << sphere.colors.size() << "\n";
 	initObject(sphere);
 }
 
@@ -877,18 +836,7 @@ bool init()
 	}
 
 	// Create all objects.
-	quad.vertices.push_back({ -1.0f, 1.0f, 0.0f });
-	quad.vertices.push_back({ -1.0, -1.0, 0.0 });
-	quad.vertices.push_back({ 1.0f, -1.0f, 0.0f });
-	quad.vertices.push_back({ 1.0f, 1.0f, 0.0f });
-	quad.colors.push_back({1, 0, 0});
-	quad.colors.push_back({ 1, 0, 0 });
-	quad.colors.push_back({ 1, 0, 0 });
-	quad.colors.push_back({ 1, 0, 0 });
-	  quad.indices = { 0, 1, 2, 0, 2, 3 };
-//  initTriangle();
- // initQuad(quad);
-  initSphere(1);
+	initSphere(1.5f);
 	//  initObject(triangle);
   return true;
 }
@@ -908,7 +856,7 @@ void render()
 	renderQuad(quad);
 	*/
 	//renderObject(triangle, 3);
-	renderObject(sphere, (sphere.indices.size() / 3));
+	renderObject(sphere, sphere.vertices.size());
 }
 
 void glutDisplay ()
@@ -1039,7 +987,10 @@ int main(int argc, char** argv)
   
   // GLEW: Load opengl extensions
   //glewExperimental = GL_TRUE;
+  
   glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+
   if (glewInit() != GLEW_OK) {
     return -1;
   }
