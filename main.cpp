@@ -29,7 +29,6 @@ float zNear = 0.1f;
 float zFar  = 100.0f;
 
 void convertRGBtoCMY(double red, double green, double blue, double &cyan, double &magenta, double &yellow) {
-	std::cout << "input convert rgb to cmy-> " << "r: " << red << " g: " << green << " b: " << blue << "\n";
 	if (red > 1 || red < 0 || blue < 0 || blue > 1 || green < 0 || green > 1) {
 		std::cout << "r,g or b is out of range->" << "r: " << red << " g: " << green << " b: " << blue << "\n";
 		return;
@@ -41,7 +40,6 @@ void convertRGBtoCMY(double red, double green, double blue, double &cyan, double
 	std::cout << "result convert rgb to cmy: " << "c: " << cyan <<  "m: " << magenta << " y: " << yellow << "\n";
 }
 void convertRGBtoHSV(double red, double green, double blue, int &h, double &s, double &v) {
-	std::cout << "input convert rgb to hsv-> " << "r: " << red << " g: " << green << " b: " << blue << "\n";
 
 	if (red > 1 || red < 0 || blue < 0 || blue > 1 || green < 0 || green > 1) {
 		std::cout << "r,g or b is out of range" << "r: " << red << "g" << green << "b" << blue << "\n";
@@ -90,7 +88,6 @@ void convertRGBtoHSV(double red, double green, double blue, int &h, double &s, d
 	std::cout << "result convert rgb to hsv-> " << "h: " << h << " s: " << s << " v: " << v << "\n";
 }
 void convertCMYtoRGB(double cyan, double magenta, double yellow, double &red, double &green, double &blue) {
-	std::cout << "input convert cmy to rgb-> " << "c: " << cyan << " m: " << magenta << " y: " << yellow << "\n";
 	if (cyan > 1 || cyan < 0 || magenta < 0 || magenta > 1 || yellow < 0 || yellow > 1) {
 		std::cout << "c,m or y is out of range" << "c: " << cyan << "m" << magenta << "y" << yellow << "\n";
 		return;
@@ -101,7 +98,6 @@ void convertCMYtoRGB(double cyan, double magenta, double yellow, double &red, do
 	std::cout << "result convert cmy to rgb-> " << "red: " << red << " green: " << green << " blue: " << blue << "\n";
 }
 void convertCMYtoHSV(double cyan, double magenta, double yellow, int &h, double &s, double &v) {
-	std::cout << "input convert cmy to hsv-> " << "c: " << cyan << " m: " << magenta << " y: " << yellow << "\n";
 	double red = 1;
 	double green = 1;
 	double blue = 1;
@@ -112,7 +108,6 @@ void convertCMYtoHSV(double cyan, double magenta, double yellow, int &h, double 
 
 }
 void convertHSVtoRGB(int h, float s, float v, double &red, double &green, double &blue) {
-	std::cout << "input convert hsv to rgb: " << "h: " << h << " s: " << s << " v: " << v << "\n";
 	if (h > 360 || h < 0 || s < 0 || s > 1 || v < 0 || v > 1) {
 		std::cout << "h,s or is out of range"<< "h: " << h << "s: " << s << "v: " << v<<"\n";
 		return;
@@ -150,10 +145,9 @@ void convertHSVtoRGB(int h, float s, float v, double &red, double &green, double
 	std::cout << "result convert hsv to rgb-> " << "red: " << red << " green: " << green << " blue: " << blue << "\n";
 }
 void convertHSVtoCMY(int h, float s, float v, double &cyan, double &magenta, double &yellow) {
-	std::cout << "convert hsv to cmy: " << "h: " << h << " s: " << s << " v: " << v << "\n";
 	convertHSVtoRGB(h, s, v, cyan, magenta, yellow);
 	convertRGBtoCMY(cyan, magenta, yellow, cyan, magenta, yellow);
-	std::cout << "convert hsv to cmy: " << "c: " << cyan << " m: " << magenta << ":y " << yellow << "\n";
+	std::cout << "result convert hsv to cmy: " << "c: " << cyan << " m: " << magenta << ":y " << yellow << "\n";
 }
 
 void readFromConsoleRGB(double &red, double &green, double &blue) {
@@ -264,6 +258,8 @@ Object triangle;
 std::vector<Object> triangles;
 Object quad;
 
+Object sphere;
+
 void renderTriangle(Object &triangle)
 {
 	// Create mvp.
@@ -294,6 +290,7 @@ void renderTriangle()
   glBindVertexArray(0);
 }
 
+
 void renderQuad(Object &quad)
 {
 	// Create mvp.
@@ -322,6 +319,21 @@ void renderQuad()
   glBindVertexArray(quad.vao);
   glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, 0);
   glBindVertexArray(0);
+}
+
+void renderObject(Object& object, int numberOfPoints)
+{
+	// Create mvp.
+	glm::mat4x4 mvp = projection * view * object.model;
+
+	// Bind the shader program and set uniform(s).
+	program.use();
+	program.setUniform("mvp", mvp);
+
+	// Bind vertex array object so we can render the 2 triangles.
+	glBindVertexArray(object.vao);
+	glDrawElements(GL_TRIANGLES, numberOfPoints, GL_UNSIGNED_SHORT, 0);
+	glBindVertexArray(0);
 }
 
 void initTriangle(Object &triangle )
@@ -384,32 +396,42 @@ void initTriangle()
   glGenBuffers(1, &triangle.positionBuffer);
   glBindBuffer(GL_ARRAY_BUFFER, triangle.positionBuffer);
   glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec3), vertices.data(), GL_STATIC_DRAW);
+
+
+
   
   // Bind it to position.
   pos = glGetAttribLocation(programId, "position");
   glEnableVertexAttribArray(pos);
   glVertexAttribPointer(pos, 3, GL_FLOAT, GL_FALSE, 0, 0);
   
+
   // Step 2: Create vertex buffer object for color attribute and bind it to...
   glGenBuffers(1, &triangle.colorBuffer);
   glBindBuffer(GL_ARRAY_BUFFER, triangle.colorBuffer);
   glBufferData(GL_ARRAY_BUFFER, colors.size() * sizeof(glm::vec3), colors.data(), GL_STATIC_DRAW);
-  
+
+
+
   // Bind it to color.
   pos = glGetAttribLocation(programId, "color");
   glEnableVertexAttribArray(pos);
   glVertexAttribPointer(pos, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
   
   // Step 3: Create vertex buffer object for indices. No binding needed here.
   glGenBuffers(1, &triangle.indexBuffer);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, triangle.indexBuffer);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLushort), indices.data(), GL_STATIC_DRAW);
+
+
   
   // Unbind vertex array object (back to default).
   glBindVertexArray(0);
   
   // Modify model matrix.
   triangle.model = glm::translate(glm::mat4(1.0f), glm::vec3(-1.25f, 0.0f, 0.0f));
+
 }
 
 void initQuad(Object &quad)
@@ -504,6 +526,324 @@ void initQuad()
   quad.model = glm::translate(glm::mat4(1.0f), glm::vec3(1.25f, 0.0f, 0.0f));
 }
 
+
+void initObject(Object& object)
+{
+
+	GLuint programId = program.getHandle();
+	GLuint pos;
+
+	// Step 0: Create vertex array object.
+	glGenVertexArrays(1, &object.vao);
+	glBindVertexArray(object.vao);
+
+	// Step 1: Create vertex buffer object for position attribute and bind it to the associated "shader attribute".
+	glGenBuffers(1, &object.positionBuffer);
+	glBindBuffer(GL_ARRAY_BUFFER, object.positionBuffer);
+	glBufferData(GL_ARRAY_BUFFER, object.vertices.size() * sizeof(glm::vec3), object.vertices.data(), GL_STATIC_DRAW);
+
+	// Bind it to position.
+	pos = glGetAttribLocation(programId, "position");
+	glEnableVertexAttribArray(pos);
+	glVertexAttribPointer(pos, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+	// Step 2: Create vertex buffer object for color attribute and bind it to...
+	glGenBuffers(1, &object.colorBuffer);
+	glBindBuffer(GL_ARRAY_BUFFER, object.colorBuffer);
+	glBufferData(GL_ARRAY_BUFFER, object.colors.size() * sizeof(glm::vec3), object.colors.data(), GL_STATIC_DRAW);
+
+	// Bind it to color.
+	pos = glGetAttribLocation(programId, "color");
+	glEnableVertexAttribArray(pos);
+	glVertexAttribPointer(pos, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+	// Step 3: Create vertex buffer object for indices. No binding needed here.
+	glGenBuffers(1, &object.indexBuffer);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, object.indexBuffer);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, object.indices.size() * sizeof(GLushort), object.indices.data(), GL_STATIC_DRAW);
+
+	// Unbind vertex array object (back to default).
+	glBindVertexArray(0);
+
+	// Modify model matrix.
+	object.model = glm::translate(glm::mat4(1.0f), glm::vec3(-1.25f, 0.0f, 0.0f));
+}
+
+
+void normalize(glm::vec3 origin, glm::vec3 v, float length, glm::vec3& normalizedVector) {
+	
+	//get the distance between aand b along the xand y axes;;
+	float dx = v[0] - origin[0];
+	float	dy = v[1] - origin[1];
+	float dz = v[2] - origin[2];
+	std::cout << dx << " " << dy << " " << dz << "\n";
+	//right now, sqrt(dx ^ 2 + dy ^ 2) = distance(a, b).
+	float distance = sqrt((dx * dx) + (dy * dy) + (dz * dz));
+	//we want to modify them so that sqrt(dx ^ 2 + dy ^ 2) = the given length.
+		
+	dx = dx * length / distance;
+	distance = sqrt((dx * dx) + (dy * dy) + (dz * dz));
+	dy = dy * length / distance;
+	distance = sqrt((dx * dx) + (dy * dy) + (dz * dz));
+	dz = dz * length / distance;
+	normalizedVector[0] = origin[0] + dx;
+	normalizedVector[1] = origin[1] + dy;
+	normalizedVector[2] = origin[2] + dz;
+
+	std::cout << normalizedVector[0] << " " << normalizedVector[1] << " " << normalizedVector[2] << "\n";
+}
+
+
+void subdivide(glm::vec3& v1, glm::vec3& v2, glm::vec3& v3, long depth, Object &object, int index, glm::vec3 origin, float radius)
+{
+	glm::vec3 v12, v23, v31;
+	GLint i;
+	
+	if (depth == 0) {
+		object.vertices.push_back(v1);
+		object.vertices.push_back(v2);
+		object.vertices.push_back(v3);
+		object.indices.push_back(index);
+		index++;
+		object.indices.push_back(index);
+		index++;
+		object.indices.push_back(index);
+		return;
+	}
+		v12.x = v1.x + v2.x;
+		v12.y = v1.y + v2.y;
+		v12.z = v1.z + v2.z;
+
+		v23.x = v2.x + v3.x;
+		v23.y = v2.y + v3.y;
+		v23.z = v2.z + v3.z;
+
+		v31.x = v3.x + v1.x;
+		v31.y = v3.y + v1.y;
+		v31.z = v3.z + v1.z;
+
+	
+	normalize(origin, v12, radius, v12);
+	normalize(origin, v23, radius, v23);
+	normalize(origin, v31, radius, v31);
+	index += 12;
+	subdivide(v1, v12, v31, depth - 1, object, index, origin, radius);
+	subdivide(v2, v23, v12, depth - 1, object, index, origin, radius);
+	subdivide(v3, v31, v23, depth - 1, object, index, origin, radius);
+	subdivide(v12, v23, v31, depth - 1, object, index, origin, radius);
+}
+
+void computeHalfVertex(const glm::vec3 v1, const glm::vec3 v2, glm::vec3 newV, const float radius)
+{
+	newV[0] = v1[0] + v2[0];    // x
+	newV[1] = v1[1] + v2[1];    // y
+	newV[2] = v1[2] + v2[2];    // z
+	float scale = radius / sqrtf(newV[0] * newV[0] + newV[1] * newV[1] + newV[2] * newV[2]);
+	newV[0] *= scale;
+	newV[1] *= scale;
+	newV[2] *= scale;
+}
+
+void initSphere(float radius) {
+	glm::vec3 origin = glm::vec3(0.0f, 0.0f, 0.0f);
+	std::vector<glm::vec3> vertices = { 
+		//links oben
+		/*glm::vec3(0.0f, 1.0f, 0.0f),
+		glm::vec3(-1.0f, 0.0f, 1.0f),
+		glm::vec3(-1.0f, 0.0f, -1.0f),
+		//mitte oben
+		glm::vec3(0.0f, 1.0f, 0.0f),
+		glm::vec3(-1.0f, 0.0f, 1.0f),
+		glm::vec3(1.0f, 0.0f, 1.0f),
+		//rechts -oben
+		glm::vec3(0.0f, 1.0f, 0.0f),
+		glm::vec3(1.0f, 0.0f, 1.0f),
+		glm::vec3(1.0f, 0.0f, -1.0f),
+		//hinten -oben
+		glm::vec3(0.0f, 1.0f, 0.0f),
+		glm::vec3(1.0f, 0.0f, 1.0f),
+		glm::vec3(1.0f, 0.0f, -1.0f),
+		//links unten
+		glm::vec3(0.0f, -1.0f, 0.0f),
+		glm::vec3(-1.0f, 0.0f, 1.0f),
+		glm::vec3(-1.0f, 0.0f, -1.0f),
+		//mitte unten
+		glm::vec3(0.0f, -1.0f, 0.0f),
+		glm::vec3(-1.0f, 0.0f, 1.0f),
+		glm::vec3(1.0f, 0.0f, 1.0f),
+		//rechts -unten
+		glm::vec3(0.0f, -1.0f, 0.0f),
+		glm::vec3(1.0f, 0.0f, 1.0f),
+		glm::vec3(1.0f, 0.0f, -1.0f),
+		//hinten -unten
+		glm::vec3(0.0f, -1.0f, 0.0f),
+		glm::vec3(1.0f, 0.0f, 1.0f),
+		glm::vec3(1.0f, 0.0f, -1.0f),
+
+		------
+		glm::vec3(0.0f, 1.0f, 0.0f),
+		glm::vec3(-1.0f, 0.0f, 0.0f),
+		glm::vec3(0.0f, 0.0f, -1.0f),
+		glm::vec3(1.0f, 0.0f, 0.0f),
+		glm::vec3(0.0f, -1.0f, 0.0f),
+		glm::vec3(0.0f, 0.0f, 1.0f)
+		*/
+
+		glm::vec3(0.0f, 1.0f, 0.0f),
+		glm::vec3(0.0f, -1.0f, 0.0f),
+		glm::vec3(0.0f, 0.0f, 1.0f),
+		glm::vec3(1.0f, 0.0f, 0.0f),
+		glm::vec3(-1.0f, 0.0f, 0.0f),
+		glm::vec3(0.0f, 0.0f, -1.0f)
+	};
+	std::vector<glm::vec3> colors = { glm::vec3(1.0f, 0.0f, 0.0f),glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f)};
+	std::vector<GLushort>  indices = { 
+	/*
+		0, 1, 2,
+		0, 2, 3,
+		0, 3, 4,
+		0, 4, 1,
+		5, 1, 2,
+		5, 2, 3,
+		5, 3, 4,
+		5, 4, 1
+	*/
+
+		0,2,3,     //face indices
+							 0,2,4,
+							 0,5,4,
+							 0,5,3,
+							 1,2,4,
+							 1,2,3,
+							 1,5,3,
+							 1,5,4
+	};
+	for (auto i : vertices) {
+		normalize(origin, i, 1, i);
+	}
+
+	std::vector<glm::vec3> tmpVertices;
+	std::vector<GLushort> tmpIndices;
+	const glm::vec3* v1, * v2, * v3;          // ptr to original vertices of a triangle
+	glm::vec3 newV1, newV2, newV3; // new vertex positions
+	unsigned int index;
+
+
+	int subdivision = 1;
+	// iterate all subdivision levels
+
+	for (int i = 1; i <= subdivision; ++i)
+	{
+		// copy prev vertex/index arrays and clear
+		tmpVertices = vertices;
+		tmpIndices = indices;
+		vertices.clear();
+		indices.clear();
+		index = 0;
+
+		// perform subdivision for each triangle
+		for (int j = 0; j < tmpIndices.size(); j += 3)
+		{
+			// get 3 vertices of a triangle
+			v1 = &tmpVertices[tmpIndices[j] * 3];
+			v2 = &tmpVertices[tmpIndices[j + 1]*3];
+			v3 = &tmpVertices[tmpIndices[j + 2] *3];
+
+			// compute 3 new vertices by spliting half on each edge
+			//         v1       
+			//        / \       
+			// newV1 *---* newV3
+			//      / \ / \     
+			//    v2---*---v3   
+			//       newV2      
+			computeHalfVertex(*v1, *v2, newV1, radius);
+			computeHalfVertex(*v2, *v3, newV2, radius);
+			computeHalfVertex(*v1, *v3, newV3, radius);
+
+			// add 4 new triangles to vertex array
+			vertices.push_back(*v1);
+			vertices.push_back(newV1);
+			vertices.push_back(newV3);
+
+			vertices.push_back(newV1);
+			vertices.push_back(*v2);
+			vertices.push_back(newV2);
+
+			vertices.push_back(newV1);
+			vertices.push_back(newV2);
+			vertices.push_back(newV3);
+
+			vertices.push_back(newV3);
+			vertices.push_back(newV2);
+			vertices.push_back(*v3);
+
+
+			// add indices of 4 new triangles
+			indices.push_back(index);
+			indices.push_back(index+1);
+			indices.push_back(index+2);
+
+			indices.push_back(index+3);
+			indices.push_back(index+4);
+			indices.push_back(index+5);
+
+			indices.push_back(index+6);
+			indices.push_back(index+7);
+			indices.push_back(index+8);
+
+			indices.push_back(index+9);
+			indices.push_back(index+10);
+			indices.push_back(index+11);
+
+			index += 12;    // next index
+		}
+	}
+	sphere.vertices = vertices;
+	sphere.indices = indices;
+
+	for (int i = 0; i < sphere.vertices.size(); i++) {
+		sphere.colors.push_back({ 0.0f, 0.0f, 1.0f });
+	}
+
+	std::cout << vertices.size() << "\n";
+	std::cout << indices.size() << "\n";
+
+
+
+
+	/*
+	for (auto i : vertices) {
+		normalize(i, origin, 1, i);
+		std::cout << i.x << " " << i.y << " " << i.z << "\n";
+	}
+	
+
+	sphere.colors = colors;
+	sphere.indices = indices;
+	sphere.vertices = vertices;
+
+	
+	subdivide(sphere.vertices[0], sphere.vertices[1], sphere.vertices[2], 0, sphere, 0, origin, radius);
+	subdivide(sphere.vertices[0], sphere.vertices[2], sphere.vertices[3], 0, sphere, 1, origin, radius);
+	subdivide(sphere.vertices[0], sphere.vertices[3], sphere.vertices[4], 0, sphere, 2, origin, radius);
+	subdivide(sphere.vertices[0], sphere.vertices[4], sphere.vertices[1], 0, sphere, 3, origin, radius);
+
+
+	
+	subdivide(sphere.vertices[5], sphere.vertices[1], sphere.vertices[2], 0, sphere, 0, origin, radius);
+	subdivide(sphere.vertices[5], sphere.vertices[2], sphere.vertices[3], 0, sphere, 0, origin, radius);
+	subdivide(sphere.vertices[5], sphere.vertices[3], sphere.vertices[4], 0, sphere, 0, origin, radius);
+	subdivide(sphere.vertices[5], sphere.vertices[4], sphere.vertices[1], 0, sphere, 0, origin, radius);
+
+	for (int i = 0; i < sphere.indices.size(); i++) {
+		std::cout << sphere.indices[i] << ", ";
+		if ((i + 1) % 3 == 0) {
+			std::cout << "\n";
+		}
+	}*/
+	initObject(sphere);
+}
+
 /*
  Initialization. Should return true if everything is ok and false if something went wrong.
  */
@@ -546,9 +886,10 @@ bool init()
 	quad.colors.push_back({ 1, 0, 0 });
 	quad.colors.push_back({ 1, 0, 0 });
 	  quad.indices = { 0, 1, 2, 0, 2, 3 };
-  initTriangle();
-  initQuad(quad);
-  
+//  initTriangle();
+ // initQuad(quad);
+  initSphere(1);
+	//  initObject(triangle);
   return true;
 }
 
@@ -557,36 +898,17 @@ bool init()
  */
 void render()
 {
-	/*
-	double red = 1;
-	double green = 1;
-	double blue = 1;
-
-	int h = 1;
-	double s = 1;
-	double v = 1;
-
-	double cyan = 1;
-	double magenta = 1;
-	double  yellow = 1;
-
-	readFromConsoleRGB(red, green, blue);
-
-	convertRGBtoCMY(red, green, blue, cyan, magenta, yellow);
-	convertRGBtoHSV(red, green, blue, h, s, v);
-	 h = 1;
-	 s = 1;
-	 v = 1;
-	readFromConsoleHSV(h, s, v);
-	convertHSVtoCMY(h, s, v, cyan, magenta, yellow);
-	convertHSVtoRGB(h, s, v, red, green, blue);*/
+	
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+	/*
 	for (auto triangle : triangles) {
 		renderTriangle(triangle);
 	}
 	//renderTriangle();
 	renderQuad(quad);
+	*/
+	//renderObject(triangle, 3);
+	renderObject(sphere, (sphere.indices.size() / 3));
 }
 
 void glutDisplay ()
@@ -653,7 +975,6 @@ void glutKeyboard (unsigned char keycode, int x, int y)
 		  color[0] = red;
 		  color[1] = green;
 		  color[2] = blue;
-		  std::cout << "hi\n";
 	  }
 	
 	  initQuad(quad);
@@ -684,7 +1005,20 @@ void glutKeyboard (unsigned char keycode, int x, int y)
 
 	  initQuad(quad);
 	  break;
+  case 'a':
+
+	  readFromConsoleRGB(red, green, blue);
+	  convertRGBtoCMY(red, green, blue, cyan, magenta, yellow);
+	  convertRGBtoHSV(red, green, blue, hue, saturation, value);
+	  break;
+  case 'b':
+
+	  readFromConsoleHSV(hue, saturation, value);
+	  convertHSVtoRGB(hue, saturation, value, red, green, blue);
+	  convertHSVtoCMY(hue, saturation, value, cyan, magenta, yellow);
+	  break;
   }
+
   glutPostRedisplay();
 }
 
@@ -705,6 +1039,7 @@ int main(int argc, char** argv)
   
   // GLEW: Load opengl extensions
   //glewExperimental = GL_TRUE;
+  glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
   if (glewInit() != GLEW_OK) {
     return -1;
   }
