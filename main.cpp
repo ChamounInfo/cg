@@ -325,6 +325,8 @@ void renderObject(Object& object, int numberOfPoints)
 	// Create mvp.
 	glm::mat4x4 mvp = projection * view * object.model;
 
+
+
 	// Bind the shader program and set uniform(s).
 	program.use();
 	program.setUniform("mvp", mvp);
@@ -671,10 +673,13 @@ void initSphere(float radius) {
 	std::cout << "Beginn\n";
 	for (auto &i : vertices) {
 		std::cout <<"vertice: " << i.x << " " << i.y << " " << i.z << "\n";
-		normalize(origin, i, radius, i);
+	//	normalize(origin, i, radius, i);
 		std::cout << "normalized vertice: " << i.x << " " << i.y << " " << i.z << "\n";
 	}
 	std::cout << "End\n";
+	sphere.colors.clear();
+	sphere.vertices.clear();
+	sphere.indices.clear();
 
 	std::vector<glm::vec3> tmpVertices;
 	std::vector<GLushort> tmpIndices;
@@ -756,7 +761,7 @@ void initSphere(float radius) {
 
 
 	for (auto &i : vertices) {
-		normalize(i, origin, 1, i);
+		//normalize(i, origin, 1, i);
 	}
 	
 	subdivide(vertices[0], vertices[2], vertices[4], subdivision, sphere, 0, origin, radius);
@@ -891,7 +896,7 @@ bool init()
 	}
 
 	// Create all objects.
-	initSphere(1.5f);
+	initSphere(1);
 	initKoodinates();
 	//  initObject(triangle);
   return true;
@@ -962,14 +967,14 @@ void glutKeyboard (unsigned char keycode, int x, int y)
     // do something
     break;
   case 'x':
-    // do something
+	  sphere.model = glm::rotate(sphere.model, glm::radians(45.0f), glm::vec3(1.0, 0.0, 0.0));
     break;
   case 'y':
-    // do something
-    break;
+	  sphere.model = glm::rotate(sphere.model, glm::radians(45.0f), glm::vec3(0.0, 1.0, 0.0));
+	  break;
   case 'z':
-    // do something
-    break;/*
+	  sphere.model = glm::rotate(sphere.model, glm::radians(45.0f), glm::vec3(0.0, 0.0, 1.0));
+	  break;/*
   case 'c':
 	  
 	  readFromConsoleRGB(cyan, magenta, yellow);
