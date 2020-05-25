@@ -28,6 +28,8 @@ glm::mat4x4 projection;
 float zNear = 0.1f;
 float zFar  = 100.0f;
 
+float zoom = 4.0f;
+
 void convertRGBtoCMY(double red, double green, double blue, double &cyan, double &magenta, double &yellow) {
 	if (red > 1 || red < 0 || blue < 0 || blue > 1 || green < 0 || green > 1) {
 		std::cout << "r,g or b is out of range->" << "r: " << red << " g: " << green << " b: " << blue << "\n";
@@ -252,8 +254,6 @@ public:
   std::vector<GLushort>  indices;
 };
 
-
-
 Object triangle;
 std::vector<Object> triangles;
 Object quad;
@@ -289,7 +289,6 @@ void renderTriangle()
   glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_SHORT, 0);
   glBindVertexArray(0);
 }
-
 
 void renderQuad(Object &quad)
 {
@@ -332,9 +331,7 @@ void renderObject(Object& object, int numberOfPoints)
 
 	// Bind vertex array object so we can render the 2 triangles.
 	glBindVertexArray(object.vao);
-	//Mit indizes
 	//glDrawElements(GL_TRIANGLES, object.indices.size(), GL_UNSIGNED_SHORT, 0);
-	//ohne indizes
 	glDrawArrays(GL_TRIANGLES, 0, object.vertices.size());
 	glBindVertexArray(0);
 }
@@ -529,7 +526,6 @@ void initQuad()
   quad.model = glm::translate(glm::mat4(1.0f), glm::vec3(1.25f, 0.0f, 0.0f));
 }
 
-
 void initObject(Object& object)
 {
 
@@ -572,7 +568,6 @@ void initObject(Object& object)
 	object.model = glm::translate(glm::mat4(1.0f), glm::vec3(-1.25f, 0.0f, 0.0f));
 }
 
-
 void normalize(glm::vec3 origin, glm::vec3 v, float length, glm::vec3& normalizedVector) {
 	
 	//get the distance between aand b along the xand y axes;;
@@ -594,7 +589,6 @@ void normalize(glm::vec3 origin, glm::vec3 v, float length, glm::vec3& normalize
 
 //	std::cout << normalizedVector[0] << " " << normalizedVector[1] << " " << normalizedVector[2] << "\n";
 }
-
 
 void subdivide(glm::vec3& v1, glm::vec3& v2, glm::vec3& v3, long depth, Object &object, int index, glm::vec3 origin, float radius)
 {
@@ -689,7 +683,7 @@ void initSphere(float radius) {
 	unsigned int index;
 
 
-	int subdivision = 2;
+	int subdivision = 0;
 	// iterate all subdivision levels
 	/*
 	for (int i = 1; i <= subdivision; ++i)
@@ -803,6 +797,67 @@ void initSphere(float radius) {
 	initObject(sphere);
 }
 
+
+Object koodinates;
+void renderKoodinates()
+{
+	// Create mvp.
+	glm::mat4x4 mvp = projection * view * koodinates.model;
+
+	// Bind the shader program and set uniform(s).
+	program.use();
+	program.setUniform("mvp", mvp);
+
+	// Bind vertex array object 
+	glBindVertexArray(koodinates.vao);
+	glDrawElements(GL_TRIANGLES, 9, GL_UNSIGNED_SHORT, 0);// der 2. Parameter gibt an, wieviele Knoten gemacht werden müssen (3 Triangle, 6 Quad)
+	glBindVertexArray(0);
+}
+void initKoodinates()
+{
+	GLuint programId = program.getHandle();
+	GLuint pos;
+	const int size = 10;
+	const std::vector<glm::vec3> vertices = { glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(size, 0.0f, 0.0f), glm::vec3(0.0f, size, 0.0f), glm::vec3(0.0f, 0.0f,size) };
+	const std::vector<glm::vec3> colors = { glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f) };
+	const std::vector<GLushort>  indices = { 0, 1, 1, 0, 2, 2, 0, 3, 3 };
+
+	// Step 0: Create vertex array object.
+	glGenVertexArrays(1, &koodinates.vao);//Unterschied zu Quad
+	glBindVertexArray(koodinates.vao);//Unterschied zu Quad
+
+	// Step 1: Create vertex buffer object for position attribute and bind it to the associated "shader attribute".
+	glGenBuffers(1, &koodinates.positionBuffer);//Unterschied zu Quad
+	glBindBuffer(GL_ARRAY_BUFFER, koodinates.positionBuffer);//Unterschied zu Quad
+	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec3), vertices.data(), GL_STATIC_DRAW);
+
+	// Bind it to position.
+	pos = glGetAttribLocation(programId, "position");
+	glEnableVertexAttribArray(pos);
+	glVertexAttribPointer(pos, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+	// Step 2: Create vertex buffer object for color attribute and bind it to...
+	glGenBuffers(1, &koodinates.colorBuffer);//Unterschied zu Quad
+	glBindBuffer(GL_ARRAY_BUFFER, koodinates.colorBuffer);//Unterschied zu Quad
+	glBufferData(GL_ARRAY_BUFFER, colors.size() * sizeof(glm::vec3), colors.data(), GL_STATIC_DRAW);
+
+	// Bind it to color.
+	pos = glGetAttribLocation(programId, "color");
+	glEnableVertexAttribArray(pos);
+	glVertexAttribPointer(pos, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+	// Step 3: Create vertex buffer object for indices. No binding needed here.
+	glGenBuffers(1, &koodinates.indexBuffer); // Unterschied zu Quad
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, koodinates.indexBuffer);//Unterschied zu Quad
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLushort), indices.data(), GL_STATIC_DRAW);
+
+	// Unbind vertex array object (back to default).
+	glBindVertexArray(0);
+
+	// Modify model matrix.
+	koodinates.model = glm::translate(glm::mat4(1.0f), glm::vec3(-1.25f, 0.0f, 0.0f));//Unterschied zu Quad
+
+}
 /*
  Initialization. Should return true if everything is ok and false if something went wrong.
  */
@@ -813,9 +868,9 @@ bool init()
 	glEnable(GL_DEPTH_TEST);
 
 	// Construct view matrix.
-	glm::vec3 eye(0.0f, 0.0f, 4.0f);
-	glm::vec3 center(0.0f, 0.0f, 0.0f);
-	glm::vec3 up(0.0f, 1.0f, 0.0f);
+	glm::vec3 eye(0.0f, 0.0f, zoom); //Kamera Position
+	glm::vec3 center(0.0f, 0.0f, 0.0f); // looking at
+ 	glm::vec3 up(0.0f, 1.0f, 0.0f); // what direction ius up
 
 	view = glm::lookAt(eye, center, up);
 
@@ -837,6 +892,7 @@ bool init()
 
 	// Create all objects.
 	initSphere(1.5f);
+	initKoodinates();
 	//  initObject(triangle);
   return true;
 }
@@ -857,6 +913,7 @@ void render()
 	*/
 	//renderObject(triangle, 3);
 	renderObject(sphere, sphere.vertices.size());
+	renderKoodinates();
 }
 
 void glutDisplay ()
@@ -912,7 +969,7 @@ void glutKeyboard (unsigned char keycode, int x, int y)
     break;
   case 'z':
     // do something
-    break;
+    break;/*
   case 'c':
 	  
 	  readFromConsoleRGB(cyan, magenta, yellow);
@@ -964,8 +1021,23 @@ void glutKeyboard (unsigned char keycode, int x, int y)
 	  readFromConsoleHSV(hue, saturation, value);
 	  convertHSVtoRGB(hue, saturation, value, red, green, blue);
 	  convertHSVtoCMY(hue, saturation, value, cyan, magenta, yellow);
+	  break; */
+  case 'a'://NEU
+	  if (zoom > 0) {
+		  zoom = zoom - 0.25;
+		  init();
+	  }
+	  std::cout << "zoomStufe: " << zoom << std::endl;
+	  break;
+  case 's'://NEU
+	  if (zoom < 15) {
+		  zoom = zoom + 0.25;
+		  init();
+	  }
+	  std::cout << "zoomStufe: " << zoom << std::endl;
 	  break;
   }
+ 
 
   glutPostRedisplay();
 }
