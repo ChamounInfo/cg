@@ -259,6 +259,8 @@ std::vector<Object> triangles;
 Object quad;
 
 Object sphere;
+int subdivision = 0;
+float radius = 1.0f;
 
 void renderTriangle(Object &triangle)
 {
@@ -592,7 +594,7 @@ void normalize(glm::vec3 origin, glm::vec3 v, float length, glm::vec3& normalize
 //	std::cout << normalizedVector[0] << " " << normalizedVector[1] << " " << normalizedVector[2] << "\n";
 }
 
-void subdivide(glm::vec3& v1, glm::vec3& v2, glm::vec3& v3, long depth, Object &object, int index, glm::vec3 origin, float radius)
+void subdivide(glm::vec3& v1, glm::vec3& v2, glm::vec3& v3, long depth, Object &object, int index, glm::vec3 origin, float r)
 {
 	glm::vec3 v12, v23, v31;
 	GLint i;
@@ -621,14 +623,14 @@ void subdivide(glm::vec3& v1, glm::vec3& v2, glm::vec3& v3, long depth, Object &
 		v31.z = v3.z + v1.z;
 
 	
-	normalize(origin, v12, radius, v12);
-	normalize(origin, v23, radius, v23);
-	normalize(origin, v31, radius, v31);
+	normalize(origin, v12, r, v12);
+	normalize(origin, v23, r, v23);
+	normalize(origin, v31, r, v31);
 	index += 12;
-	subdivide(v1, v12, v31, depth - 1, object, index, origin, radius);
-	subdivide(v2, v23, v12, depth - 1, object, index, origin, radius);
-	subdivide(v3, v31, v23, depth - 1, object, index, origin, radius);
-	subdivide(v12, v23, v31, depth - 1, object, index, origin, radius);
+	subdivide(v1, v12, v31, depth - 1, object, index, origin, r);
+	subdivide(v2, v23, v12, depth - 1, object, index, origin, r);
+	subdivide(v3, v31, v23, depth - 1, object, index, origin, r);
+	subdivide(v12, v23, v31, depth - 1, object, index, origin, r);
 }
 
 void computeHalfVertex(const glm::vec3 v1, const glm::vec3 v2, glm::vec3 newV, const float radius)
@@ -642,7 +644,7 @@ void computeHalfVertex(const glm::vec3 v1, const glm::vec3 v2, glm::vec3 newV, c
 	newV[2] *= scale;
 }
 
-void initSphere(float radius) {
+void initSphere() {
 	glm::vec3 origin = glm::vec3(0.0f, 0.0f, 0.0f);
 	std::vector<glm::vec3> vertices = { 
 		//oben
@@ -670,99 +672,15 @@ void initSphere(float radius) {
 							 1,5,3,
 							 1,5,4
 	};
-	std::cout << "Beginn\n";
-	for (auto &i : vertices) {
-		std::cout <<"vertice: " << i.x << " " << i.y << " " << i.z << "\n";
-	//	normalize(origin, i, radius, i);
-		std::cout << "normalized vertice: " << i.x << " " << i.y << " " << i.z << "\n";
-	}
-	std::cout << "End\n";
+
 	sphere.colors.clear();
 	sphere.vertices.clear();
 	sphere.indices.clear();
 
-	std::vector<glm::vec3> tmpVertices;
-	std::vector<GLushort> tmpIndices;
-	const glm::vec3* v1, * v2, * v3;          // ptr to original vertices of a triangle
-	glm::vec3 newV1, newV2, newV3; // new vertex positions
-	unsigned int index;
-
-
-	int subdivision = 0;
+	for (auto& vertice : vertices) {
+		normalize(origin, vertice, radius, vertice);
+	}
 	// iterate all subdivision levels
-	/*
-	for (int i = 1; i <= subdivision; ++i)
-	{
-		// copy prev vertex/index arrays and clear
-		tmpVertices = vertices;
-		tmpIndices = indices;
-		vertices.clear();
-		indices.clear();
-		index = 0;
-
-		// perform subdivision for each triangle
-		for (int j = 0; j < tmpIndices.size(); j += 3)
-		{
-			// get 3 vertices of a triangle
-			v1 = &tmpVertices[tmpIndices[j] * 3];
-			v2 = &tmpVertices[tmpIndices[j + 1]*3];
-			v3 = &tmpVertices[tmpIndices[j + 2] *3];
-
-			// compute 3 new vertices by spliting half on each edge
-			//         v1       
-			//        / \       
-			// newV1 *---* newV3
-			//      / \ / \     
-			//    v2---*---v3   
-			//       newV2      
-			computeHalfVertex(*v1, *v2, newV1, radius);
-			computeHalfVertex(*v2, *v3, newV2, radius);
-			computeHalfVertex(*v1, *v3, newV3, radius);
-
-			// add 4 new triangles to vertex array
-			vertices.push_back(*v1);
-			vertices.push_back(newV1);
-			vertices.push_back(newV3);
-
-			vertices.push_back(newV1);
-			vertices.push_back(*v2);
-			vertices.push_back(newV2);
-
-			vertices.push_back(newV1);
-			vertices.push_back(newV2);
-			vertices.push_back(newV3);
-
-			vertices.push_back(newV3);
-			vertices.push_back(newV2);
-			vertices.push_back(*v3);
-
-
-			// add indices of 4 new triangles
-			indices.push_back(index);
-			indices.push_back(index+1);
-			indices.push_back(index+2);
-
-			indices.push_back(index+3);
-			indices.push_back(index+4);
-			indices.push_back(index+5);
-
-			indices.push_back(index+6);
-			indices.push_back(index+7);
-			indices.push_back(index+8);
-
-			indices.push_back(index+9);
-			indices.push_back(index+10);
-			indices.push_back(index+11);
-
-			index += 12;    // next index
-		}
-	}
-	*/
-
-
-	for (auto &i : vertices) {
-		//normalize(i, origin, 1, i);
-	}
 	
 	subdivide(vertices[0], vertices[2], vertices[4], subdivision, sphere, 0, origin, radius);
 	subdivide(vertices[0], vertices[3], vertices[2], subdivision, sphere, 0, origin, radius);
@@ -774,24 +692,7 @@ void initSphere(float radius) {
 	subdivide(vertices[1], vertices[3], vertices[2], subdivision, sphere, 0, origin, radius);
 	subdivide(vertices[1], vertices[3], vertices[5], subdivision, sphere, 0, origin, radius);
 	subdivide(vertices[1], vertices[4], vertices[5], subdivision, sphere, 0, origin, radius);
-
-
-	/*
-	subdivide(vertices[0], vertices[1], vertices[2], 0, sphere, 0, origin, radius);
-	subdivide(vertices[0], vertices[2], vertices[3], 0, sphere, 0, origin, radius);
-	subdivide(vertices[0], vertices[3], vertices[4], 0, sphere, 0, origin, radius);
-	subdivide(vertices[0], vertices[4], vertices[1], 0, sphere, 0, origin, radius);
-
-
-	
-	subdivide(vertices[5], vertices[1], vertices[2], 0, sphere, 0, origin, radius);
-	subdivide(vertices[5], vertices[2], vertices[3], 0, sphere, 0, origin, radius);
-	subdivide(vertices[5], vertices[3], vertices[4], 0, sphere, 0, origin, radius);
-	subdivide(vertices[5], vertices[4], vertices[1], 0, sphere, 0, origin, radius);*/
-	for (auto i : sphere.vertices) {
-		//std::cout << i.x << " " << i.y << " " << i.z << "\n";
-	}
-
+		
 	for (int i = 0; i < sphere.vertices.size(); i++) {
 		sphere.colors.push_back({ 1.0f, 1.0f, 0.0f });
 	}
@@ -896,7 +797,7 @@ bool init()
 	}
 
 	// Create all objects.
-	initSphere(1);
+	initSphere();
 	initKoodinates();
 	//  initObject(triangle);
   return true;
@@ -961,10 +862,26 @@ void glutKeyboard (unsigned char keycode, int x, int y)
     return;
     
   case '+':
-    // do something
+	  if (subdivision == 4) {
+		  std::cout << "n can't be greater than 4 ";
+	  }
+	  else {
+		  subdivision++;
+		  initSphere();
+	  }
+
+	  std::cout << "current n: " << subdivision << "\n";
     break;
   case '-':
-    // do something
+	  if (subdivision == 0) {
+		  std::cout << "n can't be lower than 0 ";
+	  }
+	  else {
+		  subdivision--;
+		  init();
+	  }
+
+	  std::cout << "current n: " << subdivision << "\n";
     break;
   case 'x':
 	  sphere.model = glm::rotate(sphere.model, glm::radians(45.0f), glm::vec3(1.0, 0.0, 0.0));
@@ -974,72 +891,42 @@ void glutKeyboard (unsigned char keycode, int x, int y)
 	  break;
   case 'z':
 	  sphere.model = glm::rotate(sphere.model, glm::radians(45.0f), glm::vec3(0.0, 0.0, 1.0));
-	  break;/*
-  case 'c':
-	  
-	  readFromConsoleRGB(cyan, magenta, yellow);
-	  convertCMYtoRGB(cyan, magenta, yellow, red, blue, green);
-
-	  
-	  for (auto& color : quad.colors) {
-		  color[0] = red;
-		  color[1] = green;
-		  color[2] = blue;
-	  }
-	
-	  initQuad(quad);
-	  break;
-  case 'h':
-	 
-	  readFromConsoleHSV(hue, saturation, value);
-	  convertHSVtoRGB(hue, saturation, value, red, blue, green);
-
-
-	  for (auto& color : quad.colors) {
-		  color[0] = red;
-		  color[1] = green;
-		  color[2] = blue;
-	  }
-
-	  initQuad(quad);
-	  break;
-  case 'r':
-	
-	  readFromConsoleRGB(red, green, blue);
-
-	  for (auto& color : quad.colors) {
-		  color[0] = red;
-		  color[1] = green;
-		  color[2] = blue;
-	  }
-
-	  initQuad(quad);
 	  break;
   case 'a':
-
-	  readFromConsoleRGB(red, green, blue);
-	  convertRGBtoCMY(red, green, blue, cyan, magenta, yellow);
-	  convertRGBtoHSV(red, green, blue, hue, saturation, value);
-	  break;
-  case 'b':
-
-	  readFromConsoleHSV(hue, saturation, value);
-	  convertHSVtoRGB(hue, saturation, value, red, green, blue);
-	  convertHSVtoCMY(hue, saturation, value, cyan, magenta, yellow);
-	  break; */
-  case 'a'://NEU
 	  if (zoom > 0) {
 		  zoom = zoom - 0.25;
-		  init();
 	  }
 	  std::cout << "zoomStufe: " << zoom << std::endl;
 	  break;
-  case 's'://NEU
+  case 's':
 	  if (zoom < 15) {
 		  zoom = zoom + 0.25;
-		  init();
+		 
 	  }
 	  std::cout << "zoomStufe: " << zoom << std::endl;
+	  break;
+
+  case 'r':
+	  if (radius <= 0.15) {
+		  std::cout << "radius can't be lower than 0.1 ";
+	  }
+	  else {
+		  radius = radius - 0.1;
+		  initSphere();
+	  }
+
+	  std::cout << "current radius: " << radius << "\n";
+	  break;
+  case 'R':
+	  if (radius >= 4) {
+		  std::cout << "radius can't be lower than 4 ";
+	  }
+	  else {
+		  radius = radius + 0.1;
+		  initSphere();
+	  }
+
+	  std::cout << "current radius: " << radius << "\n";
 	  break;
   }
  
